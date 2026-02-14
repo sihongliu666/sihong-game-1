@@ -142,6 +142,7 @@ export class WorldMapScene extends Phaser.Scene {
     // --- Temporary debug overlay (remove once movement bug is fixed) ---
     this._debugTapCount = 0;
     this._debugRawTapCount = 0;
+    this._debugRawTouchCount = 0;
     this._debugText = this.add.text(4, 4, '', {
       fontFamily: 'monospace',
       fontSize: '9px',
@@ -159,6 +160,46 @@ export class WorldMapScene extends Phaser.Scene {
     this.game.canvas.addEventListener('pointerdown', () => {
       this._debugRawTapCount++;
     }, true);
+
+    // --- Raw DOM touch handler: bypass Phaser's input entirely ---
+    // This is a fallback that ensures tap-to-move and interactions work
+    // even if Phaser's internal pointer state gets stuck after dialogue.
+    const canvas = this.game.canvas;
+    canvas.addEventListener('touchstart', (e) => {
+      this._debugRawTouchCount++;
+
+      if (this.dialogueOpen || this._dialogueCooldown) return;
+      if (!this.player) return;
+
+      const t = e.changedTouches[0];
+      const rect = canvas.getBoundingClientRect();
+      const scaleX = this.scale.width / rect.width;
+      const scaleY = this.scale.height / rect.height;
+      const worldX = (t.clientX - rect.left) * scaleX;
+      const worldY = (t.clientY - rect.top) * scaleY;
+
+      // Check interactions (same logic as Phaser pointerdown handler)
+      if (!this._interactionCooldown) {
+        if (this.activeZone) {
+          this.handleHouseInteraction(this.activeZone);
+          this.player.moveTarget = null;
+          return;
+        }
+        if (this.npc && this.npc.playerNearby) {
+          const distToNPC = Phaser.Math.Distance.Between(
+            worldX, worldY, this.npc.x, this.npc.y
+          );
+          if (distToNPC < 60) {
+            this.handleNPCInteraction();
+            this.player.moveTarget = null;
+            return;
+          }
+        }
+      }
+
+      // Fall through: set move target
+      this.player.moveTarget = { x: worldX, y: worldY };
+    }, { passive: true });
   }
 
   // ----------------------------------------------------------------
@@ -1144,6 +1185,21 @@ export class WorldMapScene extends Phaser.Scene {
   update() {
     if (!this.player) return;
 
+    // Update debug overlay BEFORE any early returns so it's always visible
+    if (this._debugText) {
+      const p = this.input.activePointer;
+      this._debugText.setText(
+        `v8 | ptr.isDown=${p.isDown}\n` +
+        `dlgOpen=${this.dialogueOpen} cool=${this._dialogueCooldown}\n` +
+        `iCool=${this._interactionCooldown} zone=${this.activeZone || '-'}\n` +
+        `npcNear=${this.npc?.playerNearby || false}\n` +
+        `phaserTaps=${this._debugTapCount} rawTaps=${this._debugRawTapCount}\n` +
+        `rawTouch=${this._debugRawTouchCount}\n` +
+        `moveTarget=${this.player.moveTarget ? 'yes' : 'no'}\n` +
+        `vel=${Math.round(this.player.body.velocity.x)},${Math.round(this.player.body.velocity.y)}`
+      );
+    }
+
     // Block all game input while dialogue is open
     if (this.dialogueOpen) {
       this.player.body.setVelocity(0, 0);
@@ -1207,19 +1263,6 @@ export class WorldMapScene extends Phaser.Scene {
       }
     }
 
-    // --- Update debug overlay ---
-    if (this._debugText) {
-      const p = this.input.activePointer;
-      this._debugText.setText(
-        `v7 | ptr.isDown=${p.isDown}\n` +
-        `dlgOpen=${this.dialogueOpen} cool=${this._dialogueCooldown}\n` +
-        `iCool=${this._interactionCooldown} zone=${this.activeZone || '-'}\n` +
-        `npcNear=${this.npc?.playerNearby || false}\n` +
-        `phaserTaps=${this._debugTapCount} rawTaps=${this._debugRawTapCount}\n` +
-        `moveTarget=${this.player.moveTarget ? 'yes' : 'no'}\n` +
-        `vel=${Math.round(this.player.body.velocity.x)},${Math.round(this.player.body.velocity.y)}`
-      );
-    }
   }
 
   // ----------------------------------------------------------------

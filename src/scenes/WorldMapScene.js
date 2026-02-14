@@ -82,11 +82,17 @@ export class WorldMapScene extends Phaser.Scene {
         return;
       }
 
-      // Check if player is near NPC
+      // Check if player is near NPC AND the tap is near the NPC
+      // (prevents re-triggering dialogue when tapping to walk away)
       if (this.npc && this.npc.playerNearby) {
-        this.handleNPCInteraction();
-        this.player.moveTarget = null;
-        return;
+        const distToNPC = Phaser.Math.Distance.Between(
+          pointer.worldX, pointer.worldY, this.npc.x, this.npc.y
+        );
+        if (distToNPC < 60) {
+          this.handleNPCInteraction();
+          this.player.moveTarget = null;
+          return;
+        }
       }
     });
 

@@ -59,6 +59,19 @@ export class WorldMapScene extends Phaser.Scene {
       // Brief cooldown prevents the closing tap from registering as movement
       this._dialogueCooldown = true;
       setTimeout(() => { this._dialogueCooldown = false; }, 200);
+
+      // Belt-and-suspenders: manually reset every Phaser pointer.
+      // The Dialogue system dispatches a synthetic pointerup on the canvas,
+      // but if that event doesn't fully propagate (e.g. on some iOS builds),
+      // force-clear the stuck state so taps register again.
+      const pointers = this.input.manager.pointers;
+      for (const p of pointers) {
+        if (p && p.isDown) {
+          p.isDown = false;
+          p.buttons = 0;
+          p.primaryDown = false;
+        }
+      }
     });
 
     // --- Camera: fixed, no scrolling ---

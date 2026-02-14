@@ -66,6 +66,17 @@ export default class Dialogue {
     this.dialogueLines = [];
     this.lineIndex = 0;
 
+    // Fix stuck pointer: while the DOM overlay was visible it intercepted
+    // pointerup/touchend events, leaving Phaser's internal pointer stuck in
+    // the isDown=true state.  Dispatch a synthetic pointerup on the canvas
+    // so Phaser's InputManager processes it through the normal pipeline.
+    try {
+      const canvas = this.game.canvas;
+      if (canvas) {
+        canvas.dispatchEvent(new PointerEvent('pointerup', { bubbles: true }));
+      }
+    } catch (_) { /* environments without PointerEvent constructor */ }
+
     this.game.events.emit('dialogue-closed');
   }
 

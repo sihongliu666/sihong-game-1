@@ -83,9 +83,9 @@ export class BootScene extends Phaser.Scene {
     const width = this.cameras.main.width;
     const height = this.cameras.main.height;
 
-    const titleText = this.add.text(width / 2, height / 2 - 60, 'Wuxia Resume', {
+    const titleText = this.add.text(width / 2, height / 2 - 60, "Welcome to Sihong's Webpage", {
       fontFamily: '"Press Start 2P", monospace',
-      fontSize: '20px',
+      fontSize: '16px',
       color: '#e2c044',
     });
     titleText.setOrigin(0.5);
@@ -114,6 +114,11 @@ export class BootScene extends Phaser.Scene {
 
     this.load.on('complete', () => {
       progressText.setText('Ready!');
+    });
+
+    // Don't get stuck if some assets fail to load
+    this.load.on('loaderror', (file) => {
+      console.warn('Failed to load:', file.key, file.url);
     });
   }
 

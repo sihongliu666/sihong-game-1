@@ -10,6 +10,7 @@ export class WorldMapScene extends Phaser.Scene {
     this.interactKey = null;
     this.promptText = null;
     this.dialogueOpen = false;
+    this.npcTalkedOnce = false;
   }
 
   create() {
@@ -1130,13 +1131,19 @@ export class WorldMapScene extends Phaser.Scene {
     const resumeData = this.cache.json.get('resume-data');
     if (!resumeData || !resumeData.npc) return;
 
+    const npc = resumeData.npc;
+    const lines = this.npcTalkedOnce && npc.dialogueShort
+      ? npc.dialogueShort
+      : npc.dialogue;
+
     this.dialogueOpen = true;
     this.dialogue.show({
       type: 'npc',
-      title: resumeData.npc.name,
-      portrait: resumeData.npc.portrait,
-      content: resumeData.npc.dialogue,
+      title: npc.name,
+      portrait: npc.portrait,
+      content: lines,
     });
+    this.npcTalkedOnce = true;
   }
 
   _getDefaultMapData() {

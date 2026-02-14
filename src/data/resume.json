@@ -3,11 +3,12 @@
     "name": "Sihong",
     "portrait": "portrait1",
     "dialogue": [
-      "Welcome, traveler! I am Sihong Liu.",
-      "I'm an Applied Scientist specializing in AI and machine learning.",
-      "Currently I work at AWS Training & Certification, focusing on LLM Evaluation and multi-modal content generation.",
-      "Feel free to explore the village — each house holds a different part of my journey.",
-      "Use arrow keys, WASD, or click anywhere to move. Press Space near a house to enter!"
+      "Hi there! I'm Sihong Liu, an Applied Scientist at AWS Training & Certification, focusing on LLM Evaluation and multi-modal content generation.",
+      "Each house in this village tells a part of my story — About Me, Work Experience, and Education. Walk up to one and press Space to enter!",
+      "Feel free to explore! Use arrow keys, WASD, or click to move around."
+    ],
+    "dialogueShort": [
+      "Welcome back! Feel free to explore the village — walk up to any house and press Space to enter."
     ]
   },
   "houses": {

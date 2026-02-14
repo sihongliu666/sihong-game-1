@@ -138,6 +138,27 @@ export class WorldMapScene extends Phaser.Scene {
         this.player.moveTarget = null;
       }
     });
+
+    // --- Temporary debug overlay (remove once movement bug is fixed) ---
+    this._debugTapCount = 0;
+    this._debugRawTapCount = 0;
+    this._debugText = this.add.text(4, 4, '', {
+      fontFamily: 'monospace',
+      fontSize: '9px',
+      color: '#00ff00',
+      backgroundColor: '#000000cc',
+      padding: { x: 4, y: 3 },
+    });
+    this._debugText.setScrollFactor(0);
+    this._debugText.setDepth(999);
+
+    // Count Phaser-level taps
+    this.input.on('pointerdown', () => { this._debugTapCount++; });
+
+    // Count raw DOM taps on the canvas (bypasses Phaser)
+    this.game.canvas.addEventListener('pointerdown', () => {
+      this._debugRawTapCount++;
+    }, true);
   }
 
   // ----------------------------------------------------------------
@@ -1184,6 +1205,20 @@ export class WorldMapScene extends Phaser.Scene {
       } else if (this.npc && this.npc.playerNearby) {
         this.handleNPCInteraction();
       }
+    }
+
+    // --- Update debug overlay ---
+    if (this._debugText) {
+      const p = this.input.activePointer;
+      this._debugText.setText(
+        `v6 | ptr.isDown=${p.isDown}\n` +
+        `dlgOpen=${this.dialogueOpen} cool=${this._dialogueCooldown}\n` +
+        `iCool=${this._interactionCooldown} zone=${this.activeZone || '-'}\n` +
+        `npcNear=${this.npc?.playerNearby || false}\n` +
+        `phaserTaps=${this._debugTapCount} rawTaps=${this._debugRawTapCount}\n` +
+        `moveTarget=${this.player.moveTarget ? 'yes' : 'no'}\n` +
+        `vel=${Math.round(this.player.body.velocity.x)},${Math.round(this.player.body.velocity.y)}`
+      );
     }
   }
 

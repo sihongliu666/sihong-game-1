@@ -6,6 +6,7 @@
  *  - 'island': centered parchment scroll panel with resume content
  *
  * Supports both keyboard (Space/Enter/Esc) and touch (tap) interactions.
+ * Uses touchend + click handlers for reliable iOS Safari support.
  */
 export default class Dialogue {
   /**
@@ -31,16 +32,12 @@ export default class Dialogue {
   // Public API
   // ---------------------------------------------------------------
 
-  /**
-   * Show a dialogue or island panel.
-   */
   show(config) {
     if (this.isOpen) this.hide();
 
     this.isOpen = true;
     this.currentType = config.type;
 
-    // Create overlay container
     this.overlay = document.createElement('div');
     this.overlay.className = 'dialogue-overlay';
 
@@ -54,9 +51,6 @@ export default class Dialogue {
     document.addEventListener('keydown', this._onKeyDown);
   }
 
-  /**
-   * Close the overlay and return control to the game.
-   */
   hide() {
     if (!this.isOpen) return;
 
@@ -72,7 +66,6 @@ export default class Dialogue {
     this.dialogueLines = [];
     this.lineIndex = 0;
 
-    // Emit event so scenes know dialogue closed
     this.game.events.emit('dialogue-closed');
   }
 
@@ -88,6 +81,16 @@ export default class Dialogue {
 
     const box = document.createElement('div');
     box.className = 'dialogue-box';
+
+    // Close button (visible tap target for mobile)
+    const closeBtn = document.createElement('button');
+    closeBtn.className = 'dialogue-close';
+    closeBtn.textContent = '\u2715';
+    this._addTap(closeBtn, (e) => {
+      e.stopPropagation();
+      this.hide();
+    });
+    box.appendChild(closeBtn);
 
     // Portrait (left side)
     if (config.portrait) {
@@ -123,18 +126,18 @@ export default class Dialogue {
     this.overlay.appendChild(box);
     this.textElement = textEl;
 
-    // Tap anywhere on the dialogue box or overlay to advance
-    box.addEventListener('click', (e) => {
+    // Tap dialogue box to advance
+    this._addTap(box, (e) => {
       e.stopPropagation();
       this._advanceDialogue();
     });
 
     // Tap backdrop to close
-    this.overlay.addEventListener('click', () => {
+    this._addTap(this.overlay, () => {
       this.hide();
     });
 
-    // Start first line
+    // Show first line
     this._showLine(this.dialogueLines[0] || '');
   }
 
@@ -143,7 +146,7 @@ export default class Dialogue {
 
     const isLast = this.lineIndex >= this.dialogueLines.length - 1;
     if (this.promptElement) {
-      this.promptElement.textContent = isLast ? 'Tap or [Space] to close' : 'Tap or [Space] for next ▸';
+      this.promptElement.textContent = isLast ? 'Tap or [Space] to close' : 'Tap or [Space] for next \u25b8';
     }
   }
 
@@ -164,18 +167,18 @@ export default class Dialogue {
     this.overlay.classList.add('dialogue-overlay--island');
 
     // Tap backdrop to close
-    this.overlay.addEventListener('click', (e) => {
+    this._addTap(this.overlay, (e) => {
       if (e.target === this.overlay) this.hide();
     });
 
     const panel = document.createElement('div');
     panel.className = 'island-panel';
 
-    // Close button (larger, more visible)
+    // Close button
     const closeBtn = document.createElement('button');
     closeBtn.className = 'island-panel-close';
-    closeBtn.textContent = '✕';
-    closeBtn.addEventListener('click', (e) => {
+    closeBtn.textContent = '\u2715';
+    this._addTap(closeBtn, (e) => {
       e.stopPropagation();
       this.hide();
     });
@@ -196,7 +199,7 @@ export default class Dialogue {
     const closeBar = document.createElement('div');
     closeBar.className = 'island-panel-close-bar';
     closeBar.textContent = 'Tap here or press Esc to close';
-    closeBar.addEventListener('click', (e) => {
+    this._addTap(closeBar, (e) => {
       e.stopPropagation();
       this.hide();
     });
@@ -205,9 +208,6 @@ export default class Dialogue {
     this.overlay.appendChild(panel);
   }
 
-  /**
-   * Render the resume entries for an island.
-   */
   _renderIslandEntries(container, data, islandKey) {
     if (!data || !data.entries) return;
 
@@ -267,6 +267,31 @@ export default class Dialogue {
   // ---------------------------------------------------------------
   // Helpers
   // ---------------------------------------------------------------
+
+  /**
+   * Add a tap handler that works on both desktop (click) and mobile (touchend).
+   * On iOS Safari, plain divs don't fire click from touch unless cursor:pointer
+   * is set. Using touchend as primary handler with preventDefault to suppress
+   * the subsequent click avoids this issue entirely.
+   */
+  _addTap(element, handler) {
+    let touchHandled = false;
+
+    element.addEventListener('touchend', (e) => {
+      touchHandled = true;
+      e.preventDefault();
+      handler(e);
+    });
+
+    element.addEventListener('click', (e) => {
+      // Skip if already handled by touchend (prevents double-fire)
+      if (touchHandled) {
+        touchHandled = false;
+        return;
+      }
+      handler(e);
+    });
+  }
 
   /** Simple HTML escape to prevent XSS from data. */
   _esc(str) {

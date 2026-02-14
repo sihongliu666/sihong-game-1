@@ -10,11 +10,6 @@ body {
   margin: 0;
   overflow: hidden;
   background: #6b8e23;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  width: 100vw;
-  height: 100vh;
   font-family: 'Press Start 2P', monospace;
   touch-action: none;
   -webkit-touch-callout: none;
@@ -22,8 +17,14 @@ body {
   user-select: none;
 }
 
+/* Let Phaser's CENTER_BOTH handle all canvas centering.
+   Using position:fixed avoids scroll-offset issues on mobile. */
 #game-container {
-  position: relative;
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
   touch-action: none;
 }
 
@@ -65,6 +66,7 @@ body {
   background: rgba(0, 0, 0, 0.25);
   padding-bottom: 32px;
   pointer-events: all;
+  cursor: pointer;
 }
 
 /* Island mode: darker backdrop, center content */
@@ -78,6 +80,7 @@ body {
    NPC Dialogue Box
    ------------------------------------------------------------------ */
 .dialogue-box {
+  position: relative;
   background: var(--ui-dark);
   border: 3px solid var(--ui-gold);
   border-radius: 4px;
@@ -93,6 +96,33 @@ body {
   font-size: 10px;
   line-height: 1.8;
   image-rendering: pixelated;
+  cursor: pointer;
+}
+
+/* NPC dialogue close button */
+.dialogue-close {
+  position: absolute;
+  top: -14px;
+  right: -6px;
+  background: var(--ui-dark);
+  border: 2px solid var(--ui-gold);
+  border-radius: 50%;
+  color: var(--ui-gold);
+  font-size: 12px;
+  cursor: pointer;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.dialogue-close:hover,
+.dialogue-close:active {
+  background: var(--ui-gold);
+  color: var(--ui-dark);
 }
 
 /* Portrait */

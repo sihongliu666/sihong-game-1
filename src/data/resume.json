@@ -1,0 +1,107 @@
+{
+  "npc": {
+    "name": "Sihong",
+    "portrait": "portrait1",
+    "dialogue": [
+      "Welcome, traveler! I am Sihong Liu.",
+      "I'm an Applied Scientist specializing in AI and machine learning.",
+      "Currently I work at AWS Training & Certification, focusing on LLM Evaluation and multi-modal content generation.",
+      "Feel free to explore the village — each house holds a different part of my journey.",
+      "Use arrow keys, WASD, or click anywhere to move. Press Space near a house to enter!"
+    ]
+  },
+  "houses": {
+    "aboutMe": {
+      "title": "About Me",
+      "entries": [
+        {
+          "title": "Introduction",
+          "description": "Applied Scientist with 10+ years of experience across AI, machine learning, and data science. Currently working on cutting-edge LLM evaluation and multi-modal content generation at AWS."
+        },
+        {
+          "title": "Core Expertise",
+          "description": "LLM Evaluation, Multi-modal Content Generation, RAG, NLP, Transformer Models, Recommendation Systems, Trust & Safety, User Growth, and Experimentation & A/B Testing."
+        },
+        {
+          "title": "Patent",
+          "description": "Intelligent File Recommendation (Microsoft) — ML-driven document recommendation system recognized as Best AI Features Award at MSR 2018."
+        }
+      ]
+    },
+    "workExperience": {
+      "title": "Work Experience",
+      "entries": [
+        {
+          "company": "Amazon Web Services (AWS)",
+          "role": "Applied Scientist — Training & Certification",
+          "period": "2024 – Present",
+          "highlights": [
+            "Leading AI-driven content generation for AWS training and certification programs",
+            "Designing and implementing LLM evaluation frameworks for content quality assessment",
+            "Building multi-modal content generation pipelines leveraging large language models"
+          ]
+        },
+        {
+          "company": "Amazon",
+          "role": "Applied Scientist — Alexa AGI Team",
+          "period": "Jul 2022 – 2024",
+          "highlights": [
+            "Tech lead for annotation reduction in Alexa AI, driving monetary conversion and cost reduction",
+            "Led merging of multiple models for Alexa personalized recommendation",
+            "Built next-generation Alexa LLM capabilities across various projects",
+            "Collaborated with cross-domain teams for model advertising and long-term partnerships"
+          ]
+        },
+        {
+          "company": "Microsoft",
+          "role": "Senior Applied Scientist — Security & Compliance",
+          "period": "Jun 2019 – Jul 2022",
+          "highlights": [
+            "Tech lead for trust & safety, deploying behavior models for enterprise users",
+            "Built Word2Vec and LSTM models for phish/spam email detection",
+            "Utilized GPT-3 for synthetic data generation and keyword extraction (RAKE, TextRank, KeyBERT)",
+            "Fine-tuned transformer-based classifiers and implemented ML interpretation models"
+          ]
+        },
+        {
+          "company": "Microsoft",
+          "role": "Data Scientist — Office Growth",
+          "period": "Feb 2016 – May 2019",
+          "highlights": [
+            "Designed and ran A/B experiments for Office product shipping decisions",
+            "Developed parametric solution for false positive rate control in scorecard segmentation",
+            "Built document recommendation models (LightGBM + DNN with LambdaRank) — Best AI Features Award MSR 2018",
+            "Created Office 365 renewal and customer propensity models, launched marketing campaigns"
+          ]
+        },
+        {
+          "company": "IBM",
+          "role": "Data Scientist — Global Business Services",
+          "period": "Aug 2013 – Jan 2016",
+          "highlights": [
+            "Delivered ML models and business insights to improve customer loyalty and performance",
+            "Built time series forecasting, market basket analysis, and churn propensity models",
+            "Received Performance Excellence Award in 2015"
+          ]
+        }
+      ]
+    },
+    "education": {
+      "title": "Education",
+      "entries": [
+        {
+          "degree": "MS in Data Science",
+          "institution": "DePaul University, Chicago, IL",
+          "year": "2013",
+          "details": "Research Assistant — Statistical programming on big data, database refinement, and ML modeling with SAS/Python."
+        },
+        {
+          "degree": "BS in Statistics, BA in Economics",
+          "institution": "Guangdong University of Foreign Studies, China",
+          "year": "2011",
+          "details": "Dual degree in quantitative disciplines providing strong foundations in statistical analysis and economic modeling."
+        }
+      ]
+    }
+  }
+}

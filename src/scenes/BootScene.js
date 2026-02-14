@@ -75,8 +75,8 @@ export class BootScene extends Phaser.Scene {
     this.load.image('sign', 'assets/props/sign.png');
 
     // --- Data files ---
-    this.load.json('resume-data', 'src/data/resume.json');
-    this.load.json('map-data', 'src/data/mapData.json');
+    this.load.json('resume-data', 'data/resume.json');
+    this.load.json('map-data', 'data/mapData.json');
   }
 
   createLoadingBar() {

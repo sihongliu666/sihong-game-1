@@ -1,0 +1,23 @@
+{
+  "spawn": { "x": 400, "y": 450 },
+  "houses": {
+    "aboutMe": {
+      "label": "About Me",
+      "x": 150,
+      "y": 240,
+      "zone": { "x": 150, "y": 280, "w": 100, "h": 60 }
+    },
+    "workExperience": {
+      "label": "Work Experience",
+      "x": 400,
+      "y": 140,
+      "zone": { "x": 400, "y": 180, "w": 100, "h": 60 }
+    },
+    "education": {
+      "label": "Education",
+      "x": 650,
+      "y": 240,
+      "zone": { "x": 650, "y": 280, "w": 100, "h": 60 }
+    }
+  }
+}

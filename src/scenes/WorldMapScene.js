@@ -50,9 +50,12 @@ export class WorldMapScene extends Phaser.Scene {
     // --- Dialogue system ---
     this.dialogue = new Dialogue(this.game);
     this._dialogueCooldown = false;
+    this._interactionCooldown = false;
     this.game.events.on('dialogue-closed', () => {
       if (this.player) this.player.moveTarget = null;
       this.dialogueOpen = false;
+      // Prevent re-triggering the same interaction before the player walks away
+      this._interactionCooldown = true;
       // Brief cooldown prevents the closing tap from registering as movement
       this._dialogueCooldown = true;
       setTimeout(() => { this._dialogueCooldown = false; }, 200);
@@ -73,24 +76,27 @@ export class WorldMapScene extends Phaser.Scene {
     this.input.on('pointerdown', (pointer) => {
       if (this.dialogueOpen || this._dialogueCooldown) return;
 
-      // Check if player is in a house zone
-      if (this.activeZone) {
-        this.handleHouseInteraction(this.activeZone);
-        // Prevent this tap from moving the player
-        this.player.moveTarget = null;
-        return;
-      }
-
-      // Check if player is near NPC AND the tap is near the NPC
-      // (prevents re-triggering dialogue when tapping to walk away)
-      if (this.npc && this.npc.playerNearby) {
-        const distToNPC = Phaser.Math.Distance.Between(
-          pointer.worldX, pointer.worldY, this.npc.x, this.npc.y
-        );
-        if (distToNPC < 60) {
-          this.handleNPCInteraction();
+      // Skip interaction checks while cooldown is active (player just
+      // closed a dialogue and hasn't moved away yet). Taps will fall
+      // through to the Player's pointerdown handler for movement.
+      if (!this._interactionCooldown) {
+        // Check if player is in a house zone
+        if (this.activeZone) {
+          this.handleHouseInteraction(this.activeZone);
           this.player.moveTarget = null;
           return;
+        }
+
+        // Check if player is near NPC AND the tap is near the NPC
+        if (this.npc && this.npc.playerNearby) {
+          const distToNPC = Phaser.Math.Distance.Between(
+            pointer.worldX, pointer.worldY, this.npc.x, this.npc.y
+          );
+          if (distToNPC < 60) {
+            this.handleNPCInteraction();
+            this.player.moveTarget = null;
+            return;
+          }
         }
       }
     });
@@ -113,6 +119,7 @@ export class WorldMapScene extends Phaser.Scene {
     this.promptText.setOrigin(0.5);
     this.promptText.setInteractive({ useHandCursor: true });
     this.promptText.on('pointerdown', () => {
+      if (this._interactionCooldown) return;
       if (this.activeZone) {
         this.handleHouseInteraction(this.activeZone);
         this.player.moveTarget = null;
@@ -1148,9 +1155,18 @@ export class WorldMapScene extends Phaser.Scene {
       this.promptText.disableInteractive();
     }
 
+    // Reset interaction cooldown once the player has walked away
+    if (this._interactionCooldown) {
+      const nearNPC = this.npc && this.npc.playerNearby;
+      if (!nearNPC && !this.activeZone) {
+        this._interactionCooldown = false;
+      }
+    }
+
     // Handle interaction input
     if (Phaser.Input.Keyboard.JustDown(this.interactKey) || Phaser.Input.Keyboard.JustDown(this.enterKey)) {
-      if (this.activeZone) {
+      if (this._interactionCooldown) { /* wait for player to move away */ }
+      else if (this.activeZone) {
         this.handleHouseInteraction(this.activeZone);
       } else if (this.npc && this.npc.playerNearby) {
         this.handleNPCInteraction();

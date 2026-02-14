@@ -269,28 +269,14 @@ export default class Dialogue {
   // ---------------------------------------------------------------
 
   /**
-   * Add a tap handler that works on both desktop (click) and mobile (touchend).
-   * On iOS Safari, plain divs don't fire click from touch unless cursor:pointer
-   * is set. Using touchend as primary handler with preventDefault to suppress
-   * the subsequent click avoids this issue entirely.
+   * Add a tap handler using the Pointer Events API (pointerdown).
+   * Works reliably across mouse, touch, and pen on all modern browsers
+   * (iOS Safari 13+, all Android, all desktop).
    */
   _addTap(element, handler) {
-    let touchHandled = false;
-
-    element.addEventListener('touchend', (e) => {
-      touchHandled = true;
-      e.preventDefault();
-      handler(e);
-    });
-
-    element.addEventListener('click', (e) => {
-      // Skip if already handled by touchend (prevents double-fire)
-      if (touchHandled) {
-        touchHandled = false;
-        return;
-      }
-      handler(e);
-    });
+    element.style.cursor = 'pointer';
+    element.style.webkitTapHighlightColor = 'transparent';
+    element.addEventListener('pointerdown', handler);
   }
 
   /** Simple HTML escape to prevent XSS from data. */

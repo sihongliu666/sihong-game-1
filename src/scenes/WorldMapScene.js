@@ -49,14 +49,13 @@ export class WorldMapScene extends Phaser.Scene {
 
     // --- Dialogue system ---
     this.dialogue = new Dialogue(this.game);
+    this._dialogueCooldown = false;
     this.game.events.on('dialogue-closed', () => {
-      // Clear any stale move target immediately
       if (this.player) this.player.moveTarget = null;
-      // Brief delay before re-enabling game input to prevent the
-      // closing tap from registering as a movement click
-      this.time.delayedCall(150, () => {
-        this.dialogueOpen = false;
-      });
+      this.dialogueOpen = false;
+      // Brief cooldown prevents the closing tap from registering as movement
+      this._dialogueCooldown = true;
+      setTimeout(() => { this._dialogueCooldown = false; }, 200);
     });
 
     // --- Camera: fixed, no scrolling ---
@@ -72,7 +71,7 @@ export class WorldMapScene extends Phaser.Scene {
 
     // --- Tap/click to interact (for mobile support) ---
     this.input.on('pointerdown', (pointer) => {
-      if (this.dialogueOpen) return;
+      if (this.dialogueOpen || this._dialogueCooldown) return;
 
       // Check if player is in a house zone
       if (this.activeZone) {

@@ -2,7 +2,7 @@
  * DOM-based dialogue and island panel overlay system.
  *
  * Two modes:
- *  - 'npc': bottom dialogue box with portrait and typewriter text
+ *  - 'npc': bottom dialogue box with portrait and instant text
  *  - 'island': centered parchment scroll panel with resume content
  *
  * Supports both keyboard (Space/Enter/Esc) and touch (tap) interactions.
@@ -17,16 +17,11 @@ export default class Dialogue {
     this.isOpen = false;
     this.currentType = null;
 
-    // Typewriter state
-    this.typewriterTimer = null;
-    this.fullText = '';
-    this.charIndex = 0;
-    this.textElement = null;
-    this.typewriterDone = false;
-
     // NPC dialogue state
     this.dialogueLines = [];
     this.lineIndex = 0;
+    this.textElement = null;
+    this.promptElement = null;
 
     // Bound handlers
     this._onKeyDown = this._handleKeyDown.bind(this);
@@ -65,7 +60,6 @@ export default class Dialogue {
   hide() {
     if (!this.isOpen) return;
 
-    this._clearTypewriter();
     document.removeEventListener('keydown', this._onKeyDown);
 
     if (this.overlay && this.overlay.parentNode) {
@@ -145,44 +139,19 @@ export default class Dialogue {
   }
 
   _showLine(text) {
-    this._clearTypewriter();
-    this.fullText = text;
-    this.charIndex = 0;
-    this.typewriterDone = false;
-    this.textElement.textContent = '';
+    this.textElement.textContent = text;
 
-    // Update prompt text
     const isLast = this.lineIndex >= this.dialogueLines.length - 1;
     if (this.promptElement) {
       this.promptElement.textContent = isLast ? 'Tap or [Space] to close' : 'Tap or [Space] for next ▸';
     }
-
-    this.typewriterTimer = setInterval(() => {
-      if (this.charIndex < this.fullText.length) {
-        this.textElement.textContent += this.fullText[this.charIndex];
-        this.charIndex++;
-      } else {
-        this._clearTypewriter();
-        this.typewriterDone = true;
-      }
-    }, 30);
   }
 
   _advanceDialogue() {
-    // If typewriter is still running, skip to full text
-    if (!this.typewriterDone) {
-      this._clearTypewriter();
-      this.textElement.textContent = this.fullText;
-      this.typewriterDone = true;
-      return;
-    }
-
-    // Move to next line
     this.lineIndex++;
     if (this.lineIndex < this.dialogueLines.length) {
       this._showLine(this.dialogueLines[this.lineIndex]);
     } else {
-      // Last line — close
       this.hide();
     }
   }
@@ -298,13 +267,6 @@ export default class Dialogue {
   // ---------------------------------------------------------------
   // Helpers
   // ---------------------------------------------------------------
-
-  _clearTypewriter() {
-    if (this.typewriterTimer) {
-      clearInterval(this.typewriterTimer);
-      this.typewriterTimer = null;
-    }
-  }
 
   /** Simple HTML escape to prevent XSS from data. */
   _esc(str) {

@@ -50,7 +50,13 @@ export class WorldMapScene extends Phaser.Scene {
     // --- Dialogue system ---
     this.dialogue = new Dialogue(this.game);
     this.game.events.on('dialogue-closed', () => {
-      this.dialogueOpen = false;
+      // Clear any stale move target immediately
+      if (this.player) this.player.moveTarget = null;
+      // Brief delay before re-enabling game input to prevent the
+      // closing tap from registering as a movement click
+      this.time.delayedCall(150, () => {
+        this.dialogueOpen = false;
+      });
     });
 
     // --- Camera: fixed, no scrolling ---
@@ -1095,6 +1101,7 @@ export class WorldMapScene extends Phaser.Scene {
     // Block all game input while dialogue is open
     if (this.dialogueOpen) {
       this.player.body.setVelocity(0, 0);
+      this.player.moveTarget = null;
       return;
     }
 
@@ -1125,12 +1132,15 @@ export class WorldMapScene extends Phaser.Scene {
       const action = this.isTouch ? 'Tap' : 'Press SPACE';
       this.promptText.setText(`${action} to enter ${house.label}`);
       this.promptText.setVisible(true);
+      this.promptText.setInteractive();
     } else if (this.npc && this.npc.playerNearby) {
       const action = this.isTouch ? 'Tap' : 'Press SPACE';
       this.promptText.setText(`${action} to talk`);
       this.promptText.setVisible(true);
+      this.promptText.setInteractive();
     } else {
       this.promptText.setVisible(false);
+      this.promptText.disableInteractive();
     }
 
     // Handle interaction input

@@ -41,8 +41,10 @@ export default class Player extends Phaser.Physics.Arcade.Sprite {
       right: scene.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.D),
     };
 
-    // Input — mouse click
+    // Input — mouse/touch click-to-move
     scene.input.on('pointerdown', (pointer) => {
+      // Don't set move targets while dialogue is open
+      if (this.scene.dialogueOpen) return;
       this.moveTarget = { x: pointer.worldX, y: pointer.worldY };
     });
 

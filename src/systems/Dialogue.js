@@ -143,9 +143,9 @@ export default class Dialogue {
       this._advanceDialogue();
     });
 
-    // Tap backdrop to close
-    this._addTap(this.overlay, () => {
-      this.hide();
+    // Tap backdrop to close (only if tapping the backdrop itself, not the box)
+    this._addTap(this.overlay, (e) => {
+      if (e.target === this.overlay) this.hide();
     });
 
     // Show first line
@@ -280,15 +280,33 @@ export default class Dialogue {
   // ---------------------------------------------------------------
 
   /**
-   * Add a tap handler using click events.
-   * click fires AFTER the touch lifecycle completes (touchstart → touchend → click),
-   * so it's safe to remove DOM elements inside the handler without breaking iOS
-   * touch tracking for subsequent taps. cursor:pointer ensures iOS Safari fires
-   * click on non-interactive elements like divs.
+   * Add a tap handler that works reliably on iOS Safari.
+   * Uses touchend (fires at end of touch lifecycle, always reliable) for touch
+   * devices and click as a fallback for desktop mouse users.
+   * preventDefault on touchend suppresses the subsequent synthesized click,
+   * preventing double-firing.
    */
   _addTap(element, handler) {
     element.style.cursor = 'pointer';
     element.style.webkitTapHighlightColor = 'transparent';
+
+    // Track touch start position so we only treat short taps as clicks
+    let startX = 0, startY = 0;
+    element.addEventListener('touchstart', (e) => {
+      const t = e.changedTouches[0];
+      startX = t.clientX;
+      startY = t.clientY;
+    }, { passive: true });
+
+    element.addEventListener('touchend', (e) => {
+      const t = e.changedTouches[0];
+      if (Math.abs(t.clientX - startX) < 20 && Math.abs(t.clientY - startY) < 20) {
+        e.preventDefault(); // suppress ghost click
+        handler(e);
+      }
+    });
+
+    // Click fallback for desktop mouse users
     element.addEventListener('click', handler);
   }
 

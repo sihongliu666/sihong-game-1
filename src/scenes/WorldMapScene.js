@@ -1211,7 +1211,7 @@ export class WorldMapScene extends Phaser.Scene {
     if (this._debugText) {
       const p = this.input.activePointer;
       this._debugText.setText(
-        `v6 | ptr.isDown=${p.isDown}\n` +
+        `v7 | ptr.isDown=${p.isDown}\n` +
         `dlgOpen=${this.dialogueOpen} cool=${this._dialogueCooldown}\n` +
         `iCool=${this._interactionCooldown} zone=${this.activeZone || '-'}\n` +
         `npcNear=${this.npc?.playerNearby || false}\n` +

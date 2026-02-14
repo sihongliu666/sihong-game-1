@@ -61,6 +61,29 @@ export class WorldMapScene extends Phaser.Scene {
     this.interactKey = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.SPACE);
     this.enterKey = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.ENTER);
 
+    // --- Detect touch device ---
+    this.isTouch = this.sys.game.device.input.touch;
+
+    // --- Tap/click to interact (for mobile support) ---
+    this.input.on('pointerdown', (pointer) => {
+      if (this.dialogueOpen) return;
+
+      // Check if player is in a house zone
+      if (this.activeZone) {
+        this.handleHouseInteraction(this.activeZone);
+        // Prevent this tap from moving the player
+        this.player.moveTarget = null;
+        return;
+      }
+
+      // Check if player is near NPC
+      if (this.npc && this.npc.playerNearby) {
+        this.handleNPCInteraction();
+        this.player.moveTarget = null;
+        return;
+      }
+    });
+
     // --- Interaction prompt (fixed to camera, hidden initially) ---
     this.promptText = this.add.text(0, 0, '', {
       fontFamily: '"Press Start 2P", monospace',
@@ -77,6 +100,13 @@ export class WorldMapScene extends Phaser.Scene {
       this.cameras.main.height - 40
     );
     this.promptText.setOrigin(0.5);
+    this.promptText.setInteractive({ useHandCursor: true });
+    this.promptText.on('pointerdown', () => {
+      if (this.activeZone) {
+        this.handleHouseInteraction(this.activeZone);
+        this.player.moveTarget = null;
+      }
+    });
   }
 
   // ----------------------------------------------------------------
@@ -1092,7 +1122,12 @@ export class WorldMapScene extends Phaser.Scene {
     // Show/hide interaction prompt
     if (this.activeZone) {
       const house = this.mapData.houses[this.activeZone];
-      this.promptText.setText(`Press SPACE to enter ${house.label}`);
+      const action = this.isTouch ? 'Tap' : 'Press SPACE';
+      this.promptText.setText(`${action} to enter ${house.label}`);
+      this.promptText.setVisible(true);
+    } else if (this.npc && this.npc.playerNearby) {
+      const action = this.isTouch ? 'Tap' : 'Press SPACE';
+      this.promptText.setText(`${action} to talk`);
       this.promptText.setVisible(true);
     } else {
       this.promptText.setVisible(false);

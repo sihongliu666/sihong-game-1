@@ -16,8 +16,11 @@ export class WorldMapScene extends Phaser.Scene {
     const mapData = this.cache.json.get('map-data') || this._getDefaultMapData();
     this.mapData = mapData;
 
-    const worldW = 800;
+    const worldW = this.scale.width;
     const worldH = 600;
+
+    // Offset to center the original 800px layout in the wider canvas
+    this.offsetX = (worldW - 800) / 2;
 
     // --- Draw the village ---
     this.drawVillage(worldW, worldH);
@@ -33,11 +36,11 @@ export class WorldMapScene extends Phaser.Scene {
 
     // --- Spawn the player ---
     const spawn = mapData.spawn || { x: 400, y: 450 };
-    this.player = new Player(this, spawn.x, spawn.y);
+    this.player = new Player(this, spawn.x + this.offsetX, spawn.y);
     this.player.setCollideWorldBounds(true);
 
     // --- Spawn the Sihong NPC at the center of the map ---
-    this.npc = new NPC(this, 400, 350, {
+    this.npc = new NPC(this, 400 + this.offsetX, 350, {
       name: 'Sihong',
       portrait: 'portrait1',
       dialogueKey: 'npc',
@@ -115,11 +118,12 @@ export class WorldMapScene extends Phaser.Scene {
     const pathWidth = 24;
     const houses = this.mapData.houses;
     const spawn = this.mapData.spawn || { x: 400, y: 450 };
+    const ox = this.offsetX;
 
     pathGfx.fillStyle(pathColor, 1);
 
     // Path from spawn to center
-    const centerX = 400;
+    const centerX = 400 + ox;
     const centerY = 300;
     pathGfx.fillRect(centerX - pathWidth / 2, centerY, pathWidth, spawn.y - centerY);
 
@@ -127,15 +131,15 @@ export class WorldMapScene extends Phaser.Scene {
     const leftHouse = houses.aboutMe;
     const rightHouse = houses.education;
     const midY = houses.workExperience.y + 60;
-    pathGfx.fillRect(leftHouse.x - 10, midY - pathWidth / 2, rightHouse.x - leftHouse.x + 20, pathWidth);
+    pathGfx.fillRect(leftHouse.x + ox - 10, midY - pathWidth / 2, rightHouse.x - leftHouse.x + 20, pathWidth);
 
     // Vertical connectors from horizontal path down to each house door area
     for (const house of Object.values(houses)) {
       const houseBottom = house.y + 60;
       if (houseBottom < midY) {
-        pathGfx.fillRect(house.x - pathWidth / 2, houseBottom, pathWidth, midY - houseBottom + pathWidth / 2);
+        pathGfx.fillRect(house.x + ox - pathWidth / 2, houseBottom, pathWidth, midY - houseBottom + pathWidth / 2);
       } else {
-        pathGfx.fillRect(house.x - pathWidth / 2, midY - pathWidth / 2, pathWidth, houseBottom - midY + pathWidth);
+        pathGfx.fillRect(house.x + ox - pathWidth / 2, midY - pathWidth / 2, pathWidth, houseBottom - midY + pathWidth);
       }
     }
 
@@ -144,14 +148,14 @@ export class WorldMapScene extends Phaser.Scene {
 
     // Add subtle path border/shadow
     pathGfx.fillStyle(0x997744, 0.4);
-    pathGfx.fillRect(leftHouse.x - 12, midY - pathWidth / 2 - 2, rightHouse.x - leftHouse.x + 24, 2);
-    pathGfx.fillRect(leftHouse.x - 12, midY + pathWidth / 2, rightHouse.x - leftHouse.x + 24, 2);
+    pathGfx.fillRect(leftHouse.x + ox - 12, midY - pathWidth / 2 - 2, rightHouse.x - leftHouse.x + 24, 2);
+    pathGfx.fillRect(leftHouse.x + ox - 12, midY + pathWidth / 2, rightHouse.x - leftHouse.x + 24, 2);
 
     // Scatter a few small pebbles/stones on the path for detail
     const stoneGfx = this.add.graphics();
     stoneGfx.setDepth(0);
     for (let i = 0; i < 20; i++) {
-      const sx = Phaser.Math.Between(leftHouse.x - 10, rightHouse.x + 10);
+      const sx = Phaser.Math.Between(leftHouse.x + ox - 10, rightHouse.x + ox + 10);
       const sy = Phaser.Math.Between(midY - 10, midY + 10);
       stoneGfx.fillStyle(0x998866, 0.5);
       stoneGfx.fillCircle(sx, sy, Phaser.Math.Between(1, 2));
@@ -163,11 +167,12 @@ export class WorldMapScene extends Phaser.Scene {
   // ----------------------------------------------------------------
   drawHouses() {
     const houses = this.mapData.houses;
+    const ox = this.offsetX;
 
     // Each house has its own design
-    this.drawCottage(houses.aboutMe.x, houses.aboutMe.y);
-    this.drawOffice(houses.workExperience.x, houses.workExperience.y);
-    this.drawSchool(houses.education.x, houses.education.y);
+    this.drawCottage(houses.aboutMe.x + ox, houses.aboutMe.y);
+    this.drawOffice(houses.workExperience.x + ox, houses.workExperience.y);
+    this.drawSchool(houses.education.x + ox, houses.education.y);
   }
 
   // ----------------------------------------------------------------
@@ -488,6 +493,8 @@ export class WorldMapScene extends Phaser.Scene {
   placeDecorations() {
     const hasTreeSprite = this.textures.exists('tree-prop');
     const hasBushSprite = this.textures.exists('bush-prop');
+    const ox = this.offsetX;
+    const worldW = this.scale.width;
 
     // --- Trees along edges and scattered ---
     const treePositions = [
@@ -502,13 +509,27 @@ export class WorldMapScene extends Phaser.Scene {
       { x: 20, y: 180 }, { x: 780, y: 240 },
     ];
 
+    // Add edge trees for the extended area
+    if (ox > 30) {
+      // Left edge trees
+      for (let ty = 60; ty < 580; ty += 100) {
+        treePositions.push({ x: -ox + 30, y: ty + Phaser.Math.Between(-20, 20) });
+        if (ox > 80) treePositions.push({ x: -ox + 80, y: ty + 50 + Phaser.Math.Between(-20, 20) });
+      }
+      // Right edge trees
+      for (let ty = 60; ty < 580; ty += 100) {
+        treePositions.push({ x: 800 + ox - 30, y: ty + Phaser.Math.Between(-20, 20) });
+        if (ox > 80) treePositions.push({ x: 800 + ox - 80, y: ty + 50 + Phaser.Math.Between(-20, 20) });
+      }
+    }
+
     for (const pos of treePositions) {
       if (hasTreeSprite) {
-        const tree = this.add.image(pos.x, pos.y, 'tree-prop');
+        const tree = this.add.image(pos.x + ox, pos.y, 'tree-prop');
         tree.setScale(0.5);
         tree.setDepth(1);
       } else {
-        this.drawFallbackTree(pos.x, pos.y);
+        this.drawFallbackTree(pos.x + ox, pos.y);
       }
     }
 
@@ -525,13 +546,21 @@ export class WorldMapScene extends Phaser.Scene {
       { x: 600, y: 310 }, { x: 700, y: 260 },
     ];
 
+    // Add edge bushes for extended area
+    if (ox > 30) {
+      for (let by = 100; by < 560; by += 80) {
+        bushPositions.push({ x: -ox + 50, y: by + Phaser.Math.Between(-15, 15) });
+        bushPositions.push({ x: 800 + ox - 50, y: by + Phaser.Math.Between(-15, 15) });
+      }
+    }
+
     for (const pos of bushPositions) {
       if (hasBushSprite) {
-        const bush = this.add.image(pos.x, pos.y, 'bush-prop');
+        const bush = this.add.image(pos.x + ox, pos.y, 'bush-prop');
         bush.setScale(0.8);
         bush.setDepth(1);
       } else {
-        this.drawFallbackBush(pos.x, pos.y);
+        this.drawFallbackBush(pos.x + ox, pos.y);
       }
     }
 
@@ -545,16 +574,16 @@ export class WorldMapScene extends Phaser.Scene {
     this.drawStreetLamps();
 
     // --- Stone well near fountain area ---
-    this.drawWell(320, 430);
+    this.drawWell(320 + ox, 430);
 
     // --- Stone fountain near center ---
-    this.drawFountain(400, 500);
+    this.drawFountain(400 + ox, 500);
 
     // --- Small pond ---
-    this.drawPond(680, 420);
+    this.drawPond(680 + ox, 420);
 
     // --- Signpost at village entrance ---
-    this.drawSignpost(400, 560);
+    this.drawSignpost(400 + ox, 560);
 
     // --- Stepping stones near pond ---
     this.drawSteppingStones();
@@ -569,21 +598,22 @@ export class WorldMapScene extends Phaser.Scene {
   drawFlowerPatches() {
     const flowerGfx = this.add.graphics();
     flowerGfx.setDepth(1);
+    const ox = this.offsetX;
 
     const patches = [
-      { x: 200, y: 350, count: 6 },
-      { x: 600, y: 360, count: 5 },
-      { x: 100, y: 380, count: 4 },
-      { x: 320, y: 520, count: 5 },
-      { x: 500, y: 540, count: 4 },
-      { x: 180, y: 170, count: 3 },
-      { x: 620, y: 170, count: 3 },
+      { x: 200 + ox, y: 350, count: 6 },
+      { x: 600 + ox, y: 360, count: 5 },
+      { x: 100 + ox, y: 380, count: 4 },
+      { x: 320 + ox, y: 520, count: 5 },
+      { x: 500 + ox, y: 540, count: 4 },
+      { x: 180 + ox, y: 170, count: 3 },
+      { x: 620 + ox, y: 170, count: 3 },
       // More flower patches around houses
-      { x: 80, y: 240, count: 4 },
-      { x: 220, y: 200, count: 3 },
-      { x: 580, y: 200, count: 3 },
-      { x: 720, y: 240, count: 4 },
-      { x: 450, y: 400, count: 3 },
+      { x: 80 + ox, y: 240, count: 4 },
+      { x: 220 + ox, y: 200, count: 3 },
+      { x: 580 + ox, y: 200, count: 3 },
+      { x: 720 + ox, y: 240, count: 4 },
+      { x: 450 + ox, y: 400, count: 3 },
     ];
 
     const flowerColors = [0xff6b6b, 0xff9999, 0xffcc66, 0xcc88ff, 0x66ccff, 0xff88aa, 0xffaacc, 0xaaddff];
@@ -612,15 +642,16 @@ export class WorldMapScene extends Phaser.Scene {
   drawFences() {
     const fenceGfx = this.add.graphics();
     fenceGfx.setDepth(1);
+    const ox = this.offsetX;
 
     const fenceSegments = [
-      { x1: 20, x2: 120, y: 420 },
-      { x1: 680, x2: 780, y: 420 },
-      { x1: 240, x2: 310, y: 100 },
-      { x1: 490, x2: 560, y: 100 },
+      { x1: 20 + ox, x2: 120 + ox, y: 420 },
+      { x1: 680 + ox, x2: 780 + ox, y: 420 },
+      { x1: 240 + ox, x2: 310 + ox, y: 100 },
+      { x1: 490 + ox, x2: 560 + ox, y: 100 },
       // Additional fences around village perimeter
-      { x1: 20, x2: 20, y: 580, vertical: true, y2: 460 },
-      { x1: 780, x2: 780, y: 580, vertical: true, y2: 460 },
+      { x1: 20 + ox, x2: 20 + ox, y: 580, vertical: true, y2: 460 },
+      { x1: 780 + ox, x2: 780 + ox, y: 580, vertical: true, y2: 460 },
     ];
 
     for (const seg of fenceSegments) {
@@ -654,11 +685,12 @@ export class WorldMapScene extends Phaser.Scene {
   drawStreetLamps() {
     const gfx = this.add.graphics();
     gfx.setDepth(3);
+    const ox = this.offsetX;
 
     const lampPositions = [
-      { x: 280, y: 200 }, { x: 520, y: 200 },
-      { x: 350, y: 400 }, { x: 450, y: 400 },
-      { x: 200, y: 440 }, { x: 600, y: 440 },
+      { x: 280 + ox, y: 200 }, { x: 520 + ox, y: 200 },
+      { x: 350 + ox, y: 400 }, { x: 450 + ox, y: 400 },
+      { x: 200 + ox, y: 440 }, { x: 600 + ox, y: 440 },
     ];
 
     for (const pos of lampPositions) {
@@ -825,11 +857,12 @@ export class WorldMapScene extends Phaser.Scene {
   drawSteppingStones() {
     const gfx = this.add.graphics();
     gfx.setDepth(0);
+    const ox = this.offsetX;
 
     // Stepping stones from path to pond
     const stones = [
-      { x: 640, y: 400 }, { x: 650, y: 410 },
-      { x: 660, y: 405 }, { x: 655, y: 420 },
+      { x: 640 + ox, y: 400 }, { x: 650 + ox, y: 410 },
+      { x: 660 + ox, y: 405 }, { x: 655 + ox, y: 420 },
     ];
 
     for (const s of stones) {
@@ -841,8 +874,8 @@ export class WorldMapScene extends Phaser.Scene {
 
     // Stepping stones near well
     const wellStones = [
-      { x: 300, y: 420 }, { x: 310, y: 425 },
-      { x: 330, y: 422 },
+      { x: 300 + ox, y: 420 }, { x: 310 + ox, y: 425 },
+      { x: 330 + ox, y: 422 },
     ];
     for (const s of wellStones) {
       gfx.fillStyle(0x999988, 0.7);
@@ -853,17 +886,18 @@ export class WorldMapScene extends Phaser.Scene {
   drawBarrelsAndCrates() {
     const gfx = this.add.graphics();
     gfx.setDepth(2);
+    const ox = this.offsetX;
 
     // Barrel near cottage (About Me)
-    this.drawBarrel(gfx, 205, 280);
-    this.drawBarrel(gfx, 218, 278);
+    this.drawBarrel(gfx, 205 + ox, 280);
+    this.drawBarrel(gfx, 218 + ox, 278);
 
     // Crate near office (Work Experience)
-    this.drawCrate(gfx, 460, 188);
-    this.drawCrate(gfx, 474, 190);
+    this.drawCrate(gfx, 460 + ox, 188);
+    this.drawCrate(gfx, 474 + ox, 190);
 
     // Barrel near school (Education)
-    this.drawBarrel(gfx, 595, 280);
+    this.drawBarrel(gfx, 595 + ox, 280);
   }
 
   drawBarrel(gfx, x, y) {
@@ -894,9 +928,11 @@ export class WorldMapScene extends Phaser.Scene {
   }
 
   placeCreatures() {
+    const ox = this.offsetX;
+
     // Treant — ambient creature near trees (left side)
     if (this.textures.exists('treant-idle-front')) {
-      const treant = this.add.sprite(80, 350, 'treant-idle-front', 0);
+      const treant = this.add.sprite(80 + ox, 350, 'treant-idle-front', 0);
       treant.setScale(1.2);
       treant.setDepth(1);
       this.tweens.add({
@@ -911,7 +947,7 @@ export class WorldMapScene extends Phaser.Scene {
 
     // Second treant on right side
     if (this.textures.exists('treant-idle-front')) {
-      const treant2 = this.add.sprite(740, 380, 'treant-idle-front', 0);
+      const treant2 = this.add.sprite(740 + ox, 380, 'treant-idle-front', 0);
       treant2.setScale(1.0);
       treant2.setFlipX(true);
       treant2.setDepth(1);
@@ -927,7 +963,7 @@ export class WorldMapScene extends Phaser.Scene {
 
     // Mole — small critter near bushes (bottom right)
     if (this.textures.exists('mole-idle-front')) {
-      const mole = this.add.sprite(590, 530, 'mole-idle-front', 0);
+      const mole = this.add.sprite(590 + ox, 530, 'mole-idle-front', 0);
       mole.setScale(1.0);
       mole.setDepth(1);
       this.tweens.add({
@@ -942,7 +978,7 @@ export class WorldMapScene extends Phaser.Scene {
 
     // Second mole near left trees
     if (this.textures.exists('mole-idle-front')) {
-      const mole2 = this.add.sprite(150, 480, 'mole-idle-front', 0);
+      const mole2 = this.add.sprite(150 + ox, 480, 'mole-idle-front', 0);
       mole2.setScale(0.9);
       mole2.setFlipX(true);
       mole2.setDepth(1);
@@ -987,9 +1023,10 @@ export class WorldMapScene extends Phaser.Scene {
   // ----------------------------------------------------------------
   createHouseZones() {
     const houses = this.mapData.houses;
+    const ox = this.offsetX;
     for (const [key, house] of Object.entries(houses)) {
       const z = house.zone;
-      const zone = this.add.zone(z.x, z.y, z.w, z.h);
+      const zone = this.add.zone(z.x + ox, z.y, z.w, z.h);
       this.physics.add.existing(zone, true);
       zone.setOrigin(0.5);
       zone.name = key;
@@ -1002,10 +1039,11 @@ export class WorldMapScene extends Phaser.Scene {
   // ----------------------------------------------------------------
   createHouseLabels() {
     const houses = this.mapData.houses;
+    const ox = this.offsetX;
     for (const [key, house] of Object.entries(houses)) {
       const labelY = house.y - 70;
 
-      const label = this.add.text(house.x, labelY, house.label, {
+      const label = this.add.text(house.x + ox, labelY, house.label, {
         fontFamily: '"Press Start 2P", monospace',
         fontSize: '9px',
         color: '#ffffff',

@@ -161,25 +161,50 @@ body {
   flex-shrink: 0;
 }
 
-/* Close button */
+/* Close button — large tap target for mobile */
 .island-panel-close {
   position: absolute;
-  top: 10px;
-  right: 12px;
+  top: 8px;
+  right: 8px;
   background: none;
   border: 2px solid var(--border-gold);
-  border-radius: 2px;
+  border-radius: 4px;
   color: var(--ink);
   font-family: 'Press Start 2P', monospace;
-  font-size: 10px;
+  font-size: 14px;
   cursor: pointer;
-  padding: 2px 6px;
+  padding: 6px 10px;
   z-index: 1;
+  min-width: 36px;
+  min-height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
-.island-panel-close:hover {
+.island-panel-close:hover,
+.island-panel-close:active {
   background: var(--border-gold);
   color: var(--parchment);
+}
+
+/* Close bar at bottom — large tap target for mobile */
+.island-panel-close-bar {
+  text-align: center;
+  font-family: 'Press Start 2P', monospace;
+  font-size: 8px;
+  color: var(--parchment);
+  background: var(--border-gold);
+  padding: 14px 10px;
+  cursor: pointer;
+  flex-shrink: 0;
+  user-select: none;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.island-panel-close-bar:hover,
+.island-panel-close-bar:active {
+  background: #a07818;
 }
 
 /* Scrollable content area */

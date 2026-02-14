@@ -4,6 +4,8 @@
  * Two modes:
  *  - 'npc': bottom dialogue box with portrait and typewriter text
  *  - 'island': centered parchment scroll panel with resume content
+ *
+ * Supports both keyboard (Space/Enter/Esc) and touch (tap) interactions.
  */
 export default class Dialogue {
   /**
@@ -26,7 +28,7 @@ export default class Dialogue {
     this.dialogueLines = [];
     this.lineIndex = 0;
 
-    // Bound keyboard handler
+    // Bound handlers
     this._onKeyDown = this._handleKeyDown.bind(this);
   }
 
@@ -36,10 +38,6 @@ export default class Dialogue {
 
   /**
    * Show a dialogue or island panel.
-   *
-   * @param {{ type: 'npc'|'island', title: string, portrait?: string, content: string[]|object }} config
-   *   For 'npc': content is an array of dialogue strings.
-   *   For 'island': content is the island data object from resume.json.
    */
   show(config) {
     if (this.isOpen) this.hide();
@@ -124,13 +122,23 @@ export default class Dialogue {
 
     const promptEl = document.createElement('div');
     promptEl.className = 'dialogue-prompt';
-    promptEl.textContent = '[Space] Next';
     textArea.appendChild(promptEl);
     this.promptElement = promptEl;
 
     box.appendChild(textArea);
     this.overlay.appendChild(box);
     this.textElement = textEl;
+
+    // Tap anywhere on the dialogue box or overlay to advance
+    box.addEventListener('click', (e) => {
+      e.stopPropagation();
+      this._advanceDialogue();
+    });
+
+    // Tap backdrop to close
+    this.overlay.addEventListener('click', () => {
+      this.hide();
+    });
 
     // Start first line
     this._showLine(this.dialogueLines[0] || '');
@@ -146,7 +154,7 @@ export default class Dialogue {
     // Update prompt text
     const isLast = this.lineIndex >= this.dialogueLines.length - 1;
     if (this.promptElement) {
-      this.promptElement.textContent = isLast ? '[Space] Close' : '[Space] Next';
+      this.promptElement.textContent = isLast ? 'Tap or [Space] to close' : 'Tap or [Space] for next ▸';
     }
 
     this.typewriterTimer = setInterval(() => {
@@ -186,7 +194,7 @@ export default class Dialogue {
   _buildIslandPanel(config) {
     this.overlay.classList.add('dialogue-overlay--island');
 
-    // Click backdrop to close
+    // Tap backdrop to close
     this.overlay.addEventListener('click', (e) => {
       if (e.target === this.overlay) this.hide();
     });
@@ -194,11 +202,14 @@ export default class Dialogue {
     const panel = document.createElement('div');
     panel.className = 'island-panel';
 
-    // Close button
+    // Close button (larger, more visible)
     const closeBtn = document.createElement('button');
     closeBtn.className = 'island-panel-close';
-    closeBtn.textContent = 'X';
-    closeBtn.addEventListener('click', () => this.hide());
+    closeBtn.textContent = '✕';
+    closeBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      this.hide();
+    });
     panel.appendChild(closeBtn);
 
     // Title
@@ -212,18 +223,21 @@ export default class Dialogue {
     this._renderIslandEntries(contentArea, config.content, config.islandKey);
     panel.appendChild(contentArea);
 
-    // Hint
-    const hint = document.createElement('div');
-    hint.className = 'island-panel-hint';
-    hint.textContent = '[Esc] Close';
-    panel.appendChild(hint);
+    // Close bar at the bottom (large tap target for mobile)
+    const closeBar = document.createElement('div');
+    closeBar.className = 'island-panel-close-bar';
+    closeBar.textContent = 'Tap here or press Esc to close';
+    closeBar.addEventListener('click', (e) => {
+      e.stopPropagation();
+      this.hide();
+    });
+    panel.appendChild(closeBar);
 
     this.overlay.appendChild(panel);
   }
 
   /**
    * Render the resume entries for an island.
-   * Handles different structures per island type.
    */
   _renderIslandEntries(container, data, islandKey) {
     if (!data || !data.entries) return;
@@ -250,7 +264,6 @@ export default class Dialogue {
           <ul>${(entry.highlights || []).map(h => `<li>${this._esc(h)}</li>`).join('')}</ul>
         `;
       } else {
-        // Generic fallback
         card.innerHTML = `<p>${this._esc(JSON.stringify(entry))}</p>`;
       }
 

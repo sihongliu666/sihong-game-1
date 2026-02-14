@@ -269,14 +269,16 @@ export default class Dialogue {
   // ---------------------------------------------------------------
 
   /**
-   * Add a tap handler using the Pointer Events API (pointerdown).
-   * Works reliably across mouse, touch, and pen on all modern browsers
-   * (iOS Safari 13+, all Android, all desktop).
+   * Add a tap handler using click events.
+   * click fires AFTER the touch lifecycle completes (touchstart → touchend → click),
+   * so it's safe to remove DOM elements inside the handler without breaking iOS
+   * touch tracking for subsequent taps. cursor:pointer ensures iOS Safari fires
+   * click on non-interactive elements like divs.
    */
   _addTap(element, handler) {
     element.style.cursor = 'pointer';
     element.style.webkitTapHighlightColor = 'transparent';
-    element.addEventListener('pointerdown', handler);
+    element.addEventListener('click', handler);
   }
 
   /** Simple HTML escape to prevent XSS from data. */
